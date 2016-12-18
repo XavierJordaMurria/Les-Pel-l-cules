@@ -1,3 +1,14 @@
 <resources>
-    <string name="app_name">LesPellicules</string>
+    <string name="app_name">LesPel•licules</string>
+
+
+    <string name="moview">Movies</string>
+
+    <string name="search_box_title">Place your search</string>
+    <string name="search_switch_popular">Popular movies</string>
+    <string name="search_switch_topRated">Top Rated movies</string>
+    <string name="search_switch_nowPlaying">Now Playing movies</string>
+    <string name="search_switch_latest">Latest movies</string>
+    <string name="search_switch_upcoming">Upcoming movies</string>
+
 </resources>

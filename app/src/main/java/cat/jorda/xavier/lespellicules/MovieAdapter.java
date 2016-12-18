@@ -4,6 +4,11 @@
 
 package cat.jorda.xavier.lespellicules;
 
+import android.content.Intent;
+import android.util.Log;
+import android.util.SparseArray;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -12,93 +17,44 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-public class MovieAdapter extends BaseAdapter
-{
-    private Context context;
-    private final String[] mobileValues;
+import com.squareup.picasso.Picasso;
 
-    public MovieAdapter(Context context, String[] mobileValues)
+import java.util.ArrayList;
+import java.util.List;
+
+import cat.jorda.xavier.lespellicules.util.Constants;
+
+public class MovieAdapter extends ArrayAdapter<MovieInfo>
+{
+    private final String TAG = "MovieAdapter";
+    private Context context;
+
+    public MovieAdapter(Context context, List<MovieInfo> moviesSArr)
     {
+        super(context, 0, moviesSArr);
+
+        Log.d(TAG, "MovieAdapter Constructor with #elements =" + moviesSArr.size());
         this.context = context;
-        this.mobileValues = mobileValues;
     }
 
     public View getView(int position, View convertView, ViewGroup parent)
     {
 
-        LayoutInflater inflater = (LayoutInflater) context
-                .getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        View gridCell = convertView;
 
-        View gridView;
+        MovieInfo mvInfo = (MovieInfo)getItem(position);
 
-        if (convertView == null)
+        if (gridCell == null)
         {
-
-            gridView = new View(context);
-
-            // get layout from mobile.xml
-            gridView = inflater.inflate(R.layout.movie_grid_cell, null);
-
-            // set value into textview
-            TextView title = (TextView) gridView
-                    .findViewById(R.id.movie_title);
-
-            title.setText(mobileValues[position]);
-
-            // set value into textview
-            TextView rating = (TextView) gridView
-                    .findViewById(R.id.movie_rating);
-
-            rating.setText(mobileValues[position]);
-
-            // set image based on selected text
-            ImageView poster = (ImageView) gridView
-                    .findViewById(R.id.movie_poster);
-
-            String mobile = mobileValues[position];
-
-//            if (mobile.equals("Windows"))
-//            {
-//                imageView.setImageResource(R.drawable.windows_logo);
-//            }
-//            else if (mobile.equals("iOS"))
-//            {
-//                imageView.setImageResource(R.drawable.ios_logo);
-//            }
-//            else if (mobile.equals("Blackberry"))
-//            {
-//                imageView.setImageResource(R.drawable.blackberry_logo);
-//            }
-//            else
-//            {
-//                imageView.setImageResource(R.drawable.android_logo);
-//            }
-
-        }
-        else
-        {
-            gridView = (View) convertView;
+            LayoutInflater vi = LayoutInflater.from(context);
+            gridCell = vi.inflate(R.layout.movie_grid_cell, null);
         }
 
-        return gridView;
-    }
+        // set image based on selected text
+        ImageView poster = (ImageView) gridCell.findViewById(R.id.movie_poster);
 
-    @Override
-    public int getCount()
-    {
-        return mobileValues.length;
-    }
+        Picasso.with(context).load(Constants.TMDB_BASE_IMG_URL+mvInfo.mPosterPath).into(poster);
 
-    @Override
-    public Object getItem(int position)
-    {
-        return null;
+        return gridCell;
     }
-
-    @Override
-    public long getItemId(int position)
-    {
-        return 0;
-    }
-
 }

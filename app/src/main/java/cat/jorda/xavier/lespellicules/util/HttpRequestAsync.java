@@ -10,34 +10,44 @@ import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.lang.ref.WeakReference;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
+
+import cat.jorda.xavier.lespellicules.MainApplication;
+import cat.jorda.xavier.lespellicules.MovieInfo;
 
 public class HttpRequestAsync extends AsyncTask<String, Void, String>
 {
 
     private final static String TAG = "HttpRequestAsync";
 
-    private Context mContext;
-    private IHttpRequestCallback onTaskDoneListener;
+    private final WeakReference<IHttpRequestCallback> onTaskDoneListener;
     private String urlStr = "";
     private String fullURL = "";
     private int pageNum = 1;
 
-    public HttpRequestAsync(Context context, String specificAPI, IHttpRequestCallback onTaskDoneListener, int pNum)
+    private List<MovieInfo> tmpMovies = new ArrayList<>();
+
+    public HttpRequestAsync(String specificAPI, IHttpRequestCallback onTaskDoneListener, int pNum)
     {
-        this(context, specificAPI, onTaskDoneListener);
+        this(specificAPI, onTaskDoneListener);
         this.pageNum = pNum;
     }
 
-    public HttpRequestAsync(Context context, String specificAPI, IHttpRequestCallback onTaskDoneListener)
+    public HttpRequestAsync(String specificAPI, IHttpRequestCallback onTaskDoneListener)
     {
-        this.mContext = context;
         this.urlStr = Constants.TMDB_BASE_URL+specificAPI+"?api_key="+Constants.TMDB_KEY+"&language=en-US";
-        this.onTaskDoneListener = onTaskDoneListener;
+        this.onTaskDoneListener = new WeakReference<>(onTaskDoneListener);
     }
 
     /**
@@ -96,7 +106,15 @@ public class HttpRequestAsync extends AsyncTask<String, Void, String>
                 }
 
                 br.close();
-                return sb.toString();
+                String jsonString = sb.toString();
+
+                JSONObject jObject = new JSONObject(jsonString);
+
+                JSONArray jArray = jObject.getJSONArray("results");
+
+                addResult2MoviesSArray(jArray);
+
+                return jsonString;
             }
             else
             {
@@ -119,9 +137,63 @@ public class HttpRequestAsync extends AsyncTask<String, Void, String>
     {
         super.onPostExecute(s);
 
-        if (onTaskDoneListener != null && s != null)
-            onTaskDoneListener.onTaskDone(s);
+        MainApplication.getInstance().mMoviesSArray = new ArrayList<>(tmpMovies);
+
+        if (onTaskDoneListener.get() != null && s != null)
+            onTaskDoneListener.get().onTaskDone(s);
         else
-            onTaskDoneListener.onError();
+            onTaskDoneListener.get().onError();
+    }
+
+
+    private void addResult2MoviesSArray(JSONArray jArray)
+    {
+        int restLength = jArray.length();
+
+        for (int i=0; i < restLength; i++)
+        {
+            try
+            {
+                JSONObject oneObject = jArray.getJSONObject(i);
+
+                int id = oneObject.getInt(Constants.KEY_ID);
+
+
+                // Retrieve number array from JSON object.
+                JSONArray array = oneObject.optJSONArray(Constants.KEY_GENERES);
+
+                // Deal with the case of a non-array value.
+                if (array == null) { /*...*/ }
+
+                // Create an int array to accomodate the numbers.
+                int[] genArr = new int[array.length()];
+
+                // Extract numbers from JSON array.
+                for (int j = 0; j < array.length(); ++j)
+                {
+                    genArr[j] = array.optInt(j);
+                }
+
+                MovieInfo movie = new MovieInfo(id,
+                        oneObject.getString(Constants.KEY_TITLE),
+                        oneObject.getString(Constants.KEY_ORG_TITLE),
+                        oneObject.getString(Constants.KEY_ORG_LNG),
+                        oneObject.getString(Constants.KEY_POSTER),
+                        oneObject.getString(Constants.KEY_BACKDROP),
+                        oneObject.getInt(Constants.KEY_POPULARITY),
+                        oneObject.getInt(Constants.KEY_VOTE_CNT),
+                        oneObject.getDouble(Constants.KEY_VOTE_AVG),
+                        oneObject.getBoolean(Constants.KEY_ADULT),
+                        oneObject.getString(Constants.KEY_OVERVIEW),
+                        oneObject.getString(Constants.KEY_REL_DATE),
+                        genArr);
+
+                tmpMovies.add(movie);
+            }
+            catch (JSONException e)
+            {
+                Log.d(TAG, "Something went wrong parsing the result array");
+            }
+        }
     }
 }
