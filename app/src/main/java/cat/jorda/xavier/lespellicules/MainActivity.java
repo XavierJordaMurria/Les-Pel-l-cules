@@ -17,6 +17,11 @@ import android.widget.TextView;
 import java.util.Collections;
 import java.util.List;
 
+import cat.jorda.xavier.lespellicules.moviedetails.MovieAdapter;
+import cat.jorda.xavier.lespellicules.moviedetails.MovieDetailActivity;
+import cat.jorda.xavier.lespellicules.moviedetails.MovieInfo;
+import cat.jorda.xavier.lespellicules.reviews.ReviewsInfo;
+import cat.jorda.xavier.lespellicules.trailers.TrailersInfo;
 import cat.jorda.xavier.lespellicules.util.*;
 import static cat.jorda.xavier.lespellicules.MovieSearchTypes.*;
 
@@ -36,7 +41,7 @@ public class MainActivity extends AppCompatActivity implements IHttpRequestCallb
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        httpReq = new HttpRequestAsync(Constants.TMDB_POPULAR_URL, this);
+        httpReq = new HttpRequestAsync(Constants.TMDB_REQUESTS.POPULAR_URL, this);
         httpReq.execute();
 
         gridView = (GridView) findViewById(R.id.movie_grid);
@@ -47,8 +52,8 @@ public class MainActivity extends AppCompatActivity implements IHttpRequestCallb
             Log.d(TAG,"Clicked item at position:" + position);
             Intent mIntent = new Intent(this, MovieDetailActivity.class);
             mIntent.putExtra(Constants.MOVIE_POSTER_POSITION, position);
-            startActivity(mIntent);
 
+            startActivity(mIntent);
         });
 
         searchType = (TextView) findViewById(R.id.search_type);
@@ -94,6 +99,14 @@ public class MainActivity extends AppCompatActivity implements IHttpRequestCallb
         gridView.setAdapter(new MovieAdapter(this, MainApplication.getInstance().mMoviesSArray));
     }
 
+    @Override
+    public void onReviewsDone(List<ReviewsInfo> revInfo)
+    {}
+
+    @Override
+    public void onTrailersDone(List<TrailersInfo> traiInfo)
+    {}
+
     public void onError()
     {}
     //endregion
@@ -132,31 +145,31 @@ public class MainActivity extends AppCompatActivity implements IHttpRequestCallb
             case POPULAR:
                 searchType.setText(Constants.POPULAR);
                 Log.d(TAG, "We got this new movie search:" + Constants.POPULAR);
-                httpReq = new HttpRequestAsync(Constants.TMDB_POPULAR_URL, this);
+                httpReq = new HttpRequestAsync(Constants.TMDB_REQUESTS.POPULAR_URL, this);
                 break;
 
             case TOP_RATED:
                 searchType.setText(Constants.TOP_RATED);
                 Log.d(TAG, "We got this new movie search:" + Constants.TOP_RATED);
-                httpReq = new HttpRequestAsync(Constants.TMDB_TOP_RATED_URL, this);
+                httpReq = new HttpRequestAsync(Constants.TMDB_REQUESTS.TOP_RATED_URL, this);
                 break;
 
             case NOW_PLAYING:
                 searchType.setText(Constants.NOW_PLAYING);
                 Log.d(TAG, "We got this new movie search:" + Constants.NOW_PLAYING);
-                httpReq = new HttpRequestAsync(Constants.TMDB_NOW_PLAYING_URL, this);
+                httpReq = new HttpRequestAsync(Constants.TMDB_REQUESTS.NOW_PLAYING_URL, this);
                 break;
 
             case LATEST:
                 searchType.setText(Constants.LATEST);
                 Log.d(TAG, "We got this new movie search:" + Constants.LATEST);
-                httpReq = new HttpRequestAsync(Constants.TMDB_LATEST_URL, this);
+                httpReq = new HttpRequestAsync(Constants.TMDB_REQUESTS.LATEST_URL, this);
                 break;
 
             case UPCOMING:
                 searchType.setText(Constants.UPCOMING);
                 Log.d(TAG, "We got this new movie search:" + Constants.UPCOMING);
-                httpReq = new HttpRequestAsync(Constants.TMDB_UPCOMING_URL, this);
+                httpReq = new HttpRequestAsync(Constants.TMDB_REQUESTS.UPCOMING_URL, this);
                 break;
 
             default:

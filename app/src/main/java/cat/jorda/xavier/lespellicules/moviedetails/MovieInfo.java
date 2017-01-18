@@ -2,7 +2,12 @@
  * Created by xj on 09/12/2016.
  */
 
-package cat.jorda.xavier.lespellicules;
+package cat.jorda.xavier.lespellicules.moviedetails;
+
+import java.util.List;
+
+import cat.jorda.xavier.lespellicules.reviews.ReviewsInfo;
+import cat.jorda.xavier.lespellicules.trailers.TrailersInfo;
 
 public class MovieInfo
 {
@@ -41,6 +46,10 @@ public class MovieInfo
     public final String mOverveiw;
     public final String mReleaseDate;
     public final int[] mGenereIDs;
+    public List<TrailersInfo> mTrailersInfoList = null;
+    public List<ReviewsInfo> mReviewsInfoList = null;
+
+
 
     public MovieInfo(int id,
                      String title,
@@ -69,5 +78,15 @@ public class MovieInfo
         this.mOverveiw = overview;
         this.mReleaseDate = releaseDate;
         this.mGenereIDs = genereIDs;
+    }
+
+    public void addTrailes(List<TrailersInfo> tInfoList)
+    {
+        this.mTrailersInfoList = tInfoList;
+    }
+
+    public void addReview(List<ReviewsInfo> reviewsInfoList)
+    {
+        this.mReviewsInfoList = reviewsInfoList;
     }
 }

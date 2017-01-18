@@ -6,7 +6,6 @@
 
 package cat.jorda.xavier.lespellicules.util;
 
-import android.content.Context;
 import android.os.AsyncTask;
 import android.util.Log;
 
@@ -24,7 +23,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cat.jorda.xavier.lespellicules.MainApplication;
-import cat.jorda.xavier.lespellicules.MovieInfo;
+import cat.jorda.xavier.lespellicules.moviedetails.MovieInfo;
+import cat.jorda.xavier.lespellicules.reviews.ReviewsInfo;
+import cat.jorda.xavier.lespellicules.trailers.TrailersInfo;
 
 public class HttpRequestAsync extends AsyncTask<String, Void, String>
 {
@@ -35,19 +36,53 @@ public class HttpRequestAsync extends AsyncTask<String, Void, String>
     private String urlStr = "";
     private String fullURL = "";
     private int pageNum = 1;
+    private String mMovieId = "";
+    private Constants.TMDB_REQUESTS mSpecificAPI;
 
     private List<MovieInfo> tmpMovies = new ArrayList<>();
+    private List<TrailersInfo> trailersInfoList = new ArrayList<>();
+    private List<ReviewsInfo> reviewsInfoList = new ArrayList<>();
 
-    public HttpRequestAsync(String specificAPI, IHttpRequestCallback onTaskDoneListener, int pNum)
+    public HttpRequestAsync(Constants.TMDB_REQUESTS specificAPI, IHttpRequestCallback onTaskDoneListener)
     {
-        this(specificAPI, onTaskDoneListener);
-        this.pageNum = pNum;
+        /**
+         * TMDB_BASE_URL = https://api.themoviedb.org/3/movie/
+         * specificAPI = now_playing
+         * ?api_key=your_key
+         * &language=en-US&page=1
+         *
+         *  https://api.themoviedb.org/3/movie/now_playing?api_key=your_key&language=en-US&page=1
+         *  https://api.themoviedb.org/3/movie/157336/videos?api_key=your_key&language=en-US&page=1
+         */
+        mSpecificAPI = specificAPI;
+
+        this.urlStr = Constants.TMDB_BASE_URL+mSpecificAPI.toString()+"?api_key="+Constants.TMDB_KEY+"&language=en-US";
+
+        this.onTaskDoneListener = new WeakReference<>(onTaskDoneListener);
     }
 
-    public HttpRequestAsync(String specificAPI, IHttpRequestCallback onTaskDoneListener)
+    /**
+     * Add a movie Id if you would like to do an specific request.
+     * @param movieId Movie that we want to get the information from.
+     * @return
+     */
+    public HttpRequestAsync setSpecificMovieId(int movieId)
     {
-        this.urlStr = Constants.TMDB_BASE_URL+specificAPI+"?api_key="+Constants.TMDB_KEY+"&language=en-US";
-        this.onTaskDoneListener = new WeakReference<>(onTaskDoneListener);
+        this.mMovieId = Integer.toString(movieId);
+        this.urlStr = Constants.TMDB_BASE_URL+mMovieId+"/"+mSpecificAPI+"?api_key="+Constants.TMDB_KEY+"&language=en-US";
+
+        return this;
+    }
+
+    /**
+     * Add a page parameter to the HtppRequestAsync obj.
+     * @param page number to get from the API
+     * @return object containing the new page information.
+     */
+    public HttpRequestAsync setPage(int page)
+    {
+        this.pageNum = page;
+        return this;
     }
 
     /**
@@ -112,7 +147,12 @@ public class HttpRequestAsync extends AsyncTask<String, Void, String>
 
                 JSONArray jArray = jObject.getJSONArray("results");
 
-                addResult2MoviesSArray(jArray);
+                if(mSpecificAPI == Constants.TMDB_REQUESTS.REVIEWS_URL)
+                    parseReview(jArray);
+                else if (mSpecificAPI == Constants.TMDB_REQUESTS.TRAILERS_URL)
+                    parseTrailers(jArray);
+                else
+                    addResult2MoviesSArray(jArray);
 
                 return jsonString;
             }
@@ -137,14 +177,79 @@ public class HttpRequestAsync extends AsyncTask<String, Void, String>
     {
         super.onPostExecute(s);
 
-        MainApplication.getInstance().mMoviesSArray = new ArrayList<>(tmpMovies);
 
-        if (onTaskDoneListener.get() != null && s != null)
-            onTaskDoneListener.get().onTaskDone(s);
+
+        if (onTaskDoneListener.get() == null)
+        {
+            Log.e(TAG, "TaskDoneListener is null");
+            return;
+        }
+
+        if (s != null)
+        {
+            if(mSpecificAPI == Constants.TMDB_REQUESTS.REVIEWS_URL)
+                onTaskDoneListener.get().onReviewsDone(reviewsInfoList);
+            else if (mSpecificAPI == Constants.TMDB_REQUESTS.TRAILERS_URL)
+                onTaskDoneListener.get().onTrailersDone(trailersInfoList);
+            else
+            {
+                MainApplication.getInstance().mMoviesSArray = new ArrayList<>(tmpMovies);
+                onTaskDoneListener.get().onTaskDone(s);
+            }
+        }
         else
             onTaskDoneListener.get().onError();
     }
 
+
+    private void parseReview(JSONArray jsonArray)
+    {
+        int restLength = jsonArray.length();
+
+        for (int i=0; i < restLength; i++)
+        {
+            try
+            {
+                JSONObject oneObject = jsonArray.getJSONObject(i);
+
+                String id   = oneObject.getString(Constants.KEY_ID);
+                String author   = oneObject.getString(Constants.KEY_AUTHOR);
+                String content  = oneObject.getString(Constants.KEY_CONTENT);
+                String url  = oneObject.getString(Constants.KEY_URL);
+
+                reviewsInfoList.add(new ReviewsInfo(id, author, content, url));
+            }
+            catch (JSONException e)
+            {
+                Log.e(TAG, "Something went wrong parsing the Reviews json result array");
+            }
+        }
+    }
+
+    private void parseTrailers(JSONArray jsonArray)
+    {
+        int restLength = jsonArray.length();
+
+        for (int i=0; i < restLength; i++)
+        {
+            try
+            {
+                JSONObject oneObject = jsonArray.getJSONObject(i);
+
+                String id = oneObject.getString(Constants.KEY_ID);
+                String key = oneObject.getString(Constants.KEY_KEY);
+                String name = oneObject.getString(Constants.KEY_NAME);
+                String site = oneObject.getString(Constants.KEY_SITE);
+                String type = oneObject.getString(Constants.KEY_TYPE);
+
+                trailersInfoList.add(new TrailersInfo(id, key, name, site, type));
+            }
+            catch (JSONException e)
+            {
+                Log.e(TAG, "Something went wrong parsing the trailers json result array");
+            }
+        }
+    }
 
     private void addResult2MoviesSArray(JSONArray jArray)
     {
@@ -192,7 +297,7 @@ public class HttpRequestAsync extends AsyncTask<String, Void, String>
             }
             catch (JSONException e)
             {
-                Log.d(TAG, "Something went wrong parsing the result array");
+                Log.e(TAG, "Something went wrong parsing the result array");
             }
         }
     }

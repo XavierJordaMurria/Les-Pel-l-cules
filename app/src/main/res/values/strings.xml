@@ -11,4 +11,7 @@
     <string name="search_switch_latest">Latest movies</string>
     <string name="search_switch_upcoming">Upcoming movies</string>
 
+    <string name="trailers">Trailes</string>
+    <string name="reviews">Reviews</string>
+
 </resources>

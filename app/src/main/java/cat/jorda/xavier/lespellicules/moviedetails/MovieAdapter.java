@@ -2,26 +2,21 @@
  * Created by xj on 09/12/2016.
  */
 
-package cat.jorda.xavier.lespellicules;
+package cat.jorda.xavier.lespellicules.moviedetails;
 
-import android.content.Intent;
 import android.util.Log;
-import android.util.SparseArray;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
-import java.util.ArrayList;
 import java.util.List;
 
+import cat.jorda.xavier.lespellicules.R;
 import cat.jorda.xavier.lespellicules.util.Constants;
 
 public class MovieAdapter extends ArrayAdapter<MovieInfo>
