@@ -35,13 +35,14 @@ public class MovieDetailActivity extends FragmentActivity implements IHttpReques
 {
     private static final String TAG = "MovieDetailActivity";
 
-    private ImageView poster;
+    private ImageView poster,favStar;
     private TextView movieTitle, releaseDate, duration, originalLang, score, scoreCount, popularity, adultType, overview;
     private MovieInfo currentMovie;
     private Button  trailersBtn, reviewsBtn;
     private FrameLayout frameLayout;
 
     private int itemClicked;
+    private boolean favStartClicked = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -81,6 +82,24 @@ public class MovieDetailActivity extends FragmentActivity implements IHttpReques
         });
 
         frameLayout = (FrameLayout)findViewById(R.id.details_frame);
+
+        favStar = (ImageView)findViewById(R.id.fav_star);
+
+        favStar.setOnClickListener((View v) ->
+        {
+            if(favStartClicked)
+            {
+                favStar.setImageResource(R.drawable.fav_start_0);
+                //remove to the DB
+            }
+            else
+            {
+                favStar.setImageResource(R.drawable.fav_start_1);
+                //add to the DB
+            }
+
+            favStartClicked = !favStartClicked;
+        });
 
         fillView(currentMoviecurrentMovie);
 
