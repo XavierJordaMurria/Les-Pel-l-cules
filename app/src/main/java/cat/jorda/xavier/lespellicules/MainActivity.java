@@ -4,6 +4,8 @@ import android.app.DialogFragment;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -13,16 +15,22 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import cat.jorda.xavier.lespellicules.data.MoviesContract;
+import cat.jorda.xavier.lespellicules.data.PeliculesDB;
 import cat.jorda.xavier.lespellicules.moviedetails.MovieAdapter;
 import cat.jorda.xavier.lespellicules.moviedetails.MovieDetailActivity;
 import cat.jorda.xavier.lespellicules.moviedetails.MovieInfo;
 import cat.jorda.xavier.lespellicules.reviews.ReviewsInfo;
 import cat.jorda.xavier.lespellicules.trailers.TrailersInfo;
 import cat.jorda.xavier.lespellicules.util.*;
+
+import static android.R.id.list;
 import static cat.jorda.xavier.lespellicules.MovieSearchTypes.*;
 
 public class MainActivity extends AppCompatActivity implements IHttpRequestCallback,
@@ -85,6 +93,10 @@ public class MainActivity extends AppCompatActivity implements IHttpRequestCallb
             case (R.id.search):
                 showDialog();
                 break;
+
+            case (R.id.favourites):
+                loadFavouritesMovies();
+                break;
         }
 
         gridView.setAdapter(new MovieAdapter(this, MainApplication.getInstance().mMoviesSArray));
@@ -134,6 +146,72 @@ public class MainActivity extends AppCompatActivity implements IHttpRequestCallb
         // Create and show the dialog. 2, 4
         DialogFragment newFragment = CustomDialogBox.newInstance(4);
         newFragment.show(ft, "dialog");
+    }
+
+    private void loadFavouritesMovies()
+    {
+        Log.d(TAG, "loadFavouritesMovies");
+
+        List<MovieInfo> tmpMovieList = new ArrayList<>();
+
+        // Run query
+        Uri uri = MoviesContract.MoviesEntry.CONTENT_URI;
+        String[] projection = new String[] {MoviesContract.MoviesEntry._ID,
+                MoviesContract.MoviesEntry.COLUMN_TITLE,
+                MoviesContract.MoviesEntry.COLUMN_ORI_TITLE,
+                MoviesContract.MoviesEntry.COLUMN_ORI_LAN,
+                MoviesContract.MoviesEntry.COLUMN_POSTER_PATH,
+                MoviesContract.MoviesEntry.COLUMN_LOCAL_POSTER_PATH,
+                MoviesContract.MoviesEntry.COLUMN_BACKDROP_PATH,
+                MoviesContract.MoviesEntry.COLUMN_VOTE_COUNT,
+                MoviesContract.MoviesEntry.COLUMN_VOTE_AVG,
+                MoviesContract.MoviesEntry.COLUMN_ADULT_TYPE,
+                MoviesContract.MoviesEntry.COLUMN_OVERVIEW,
+                MoviesContract.MoviesEntry.COLUMN_RELEASE_DATE,
+                MoviesContract.MoviesEntry.COLUMN_POPULARITY,
+                MoviesContract.MoviesEntry.COLUMN_GENERE};
+
+        String selection = null;
+        String[] selectionArgs = null;
+        String sortOrder = null;
+
+        Cursor cursor = getContentResolver().query(uri, projection, selection, selectionArgs, sortOrder);
+
+        if (cursor != null)
+        {
+            cursor.moveToFirst();
+            MovieInfo movieTmp;
+            for (int i = 0; i < cursor.getCount(); i++)
+            {
+                movieTmp = new MovieInfo(cursor.getInt(cursor.getColumnIndexOrThrow(MoviesContract.MoviesEntry._ID)),
+                cursor.getString(cursor.getColumnIndexOrThrow(MoviesContract.MoviesEntry.COLUMN_TITLE)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(MoviesContract.MoviesEntry.COLUMN_ORI_TITLE)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(MoviesContract.MoviesEntry.COLUMN_ORI_LAN)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(MoviesContract.MoviesEntry.COLUMN_POSTER_PATH)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(MoviesContract.MoviesEntry.COLUMN_BACKDROP_PATH)),
+                        cursor.getInt(cursor.getColumnIndexOrThrow(MoviesContract.MoviesEntry.COLUMN_POPULARITY)),
+                        cursor.getInt(cursor.getColumnIndexOrThrow(MoviesContract.MoviesEntry.COLUMN_VOTE_COUNT)),
+                        cursor.getDouble(cursor.getColumnIndexOrThrow(MoviesContract.MoviesEntry.COLUMN_VOTE_AVG)),
+                        cursor.getInt(cursor.getColumnIndexOrThrow(MoviesContract.MoviesEntry.COLUMN_ADULT_TYPE)) > 0,
+                        cursor.getString(cursor.getColumnIndexOrThrow(MoviesContract.MoviesEntry.COLUMN_OVERVIEW)),
+                        cursor.getString(cursor.getColumnIndexOrThrow(MoviesContract.MoviesEntry.COLUMN_RELEASE_DATE)),
+                        new int[]{cursor.getInt(cursor.getColumnIndexOrThrow(MoviesContract.MoviesEntry.COLUMN_GENERE))})
+                        .setMovieLocalPosterPath(cursor.getString(cursor.getColumnIndexOrThrow(MoviesContract.MoviesEntry.COLUMN_LOCAL_POSTER_PATH)));
+
+                tmpMovieList.add(movieTmp);
+
+                cursor.moveToNext();
+            }
+
+            // always close the cursor
+            cursor.close();
+        }
+        else
+        {
+            Toast.makeText(getApplicationContext(),"Favourite DB is empty",Toast.LENGTH_LONG);
+        }
+
+        //replace main movies list.
     }
     //endregion
 

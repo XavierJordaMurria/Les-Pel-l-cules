@@ -49,6 +49,8 @@ public class MovieInfo
     public List<TrailersInfo> mTrailersInfoList = null;
     public List<ReviewsInfo> mReviewsInfoList = null;
 
+    public String mLocalPosterPath = null;
+
 
 
     public MovieInfo(int id,
@@ -88,5 +90,11 @@ public class MovieInfo
     public void addReview(List<ReviewsInfo> reviewsInfoList)
     {
         this.mReviewsInfoList = reviewsInfoList;
+    }
+
+    public MovieInfo setMovieLocalPosterPath(String path)
+    {
+        mLocalPosterPath = path;
+        return this;
     }
 }

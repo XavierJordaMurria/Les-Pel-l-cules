@@ -1,6 +1,20 @@
+/**
+ * Created by xj on 18/12/2016.
+ */
+
+
 package cat.jorda.xavier.lespellicules.moviedetails;
 
+import android.Manifest;
+import android.app.Activity;
 import android.app.Fragment;
+import android.content.ContentValues;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
+import android.os.Environment;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.view.View;
 import android.app.FragmentManager;
@@ -12,12 +26,21 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.squareup.picasso.Picasso;
+import android.support.v4.app.LoaderManager;
+import android.support.v4.content.CursorLoader;
+import android.support.v4.content.Loader;
 
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.lang.ref.WeakReference;
 import java.util.List;
 
 import cat.jorda.xavier.lespellicules.MainApplication;
 import cat.jorda.xavier.lespellicules.R;
+import cat.jorda.xavier.lespellicules.data.MoviesContract;
 import cat.jorda.xavier.lespellicules.reviews.ReviewsFragment;
 import cat.jorda.xavier.lespellicules.reviews.ReviewsInfo;
 import cat.jorda.xavier.lespellicules.trailers.TrailersFragment;
@@ -26,12 +49,7 @@ import cat.jorda.xavier.lespellicules.util.Constants;
 import cat.jorda.xavier.lespellicules.util.HttpRequestAsync;
 import cat.jorda.xavier.lespellicules.util.IHttpRequestCallback;
 
-
-/**
- * Created by xj on 18/12/2016.
- */
-
-public class MovieDetailActivity extends FragmentActivity implements IHttpRequestCallback
+public class MovieDetailActivity extends FragmentActivity implements IHttpRequestCallback, LoaderManager.LoaderCallbacks<Cursor>
 {
     private static final String TAG = "MovieDetailActivity";
 
@@ -43,6 +61,16 @@ public class MovieDetailActivity extends FragmentActivity implements IHttpReques
 
     private int itemClicked;
     private boolean favStartClicked = false;
+    private static final int CURSOR_LOADER_ID = 0;
+
+    private ContentValues movieValue;
+
+    private static final int REQUEST_EXTERNAL_STORAGE = 1;
+    private static String[] PERMISSIONS_STORAGE =
+            {
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.WRITE_EXTERNAL_STORAGE
+            };
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -52,7 +80,7 @@ public class MovieDetailActivity extends FragmentActivity implements IHttpReques
         Log.d(TAG, "onCreate");
 
         itemClicked = getIntent().getExtras().getInt(Constants.MOVIE_POSTER_POSITION);
-        final MovieInfo currentMoviecurrentMovie =  MainApplication.getInstance().mMoviesSArray.get(itemClicked);
+        currentMovie =  MainApplication.getInstance().mMoviesSArray.get(itemClicked);
 
         setContentView(R.layout.movie_detail);
 
@@ -87,27 +115,31 @@ public class MovieDetailActivity extends FragmentActivity implements IHttpReques
 
         favStar.setOnClickListener((View v) ->
         {
-            if(favStartClicked)
+            if(!favStartClicked)
             {
-                favStar.setImageResource(R.drawable.fav_start_0);
-                //remove to the DB
+                //add to the DB
+                favStar.setImageResource(R.drawable.fav_start_1);
+                Picasso.with(getApplicationContext()).load(Constants.TMDB_BASE_IMG_URL+currentMovie.mPosterPath).into(new CustomTarget(this, currentMovie.mTitle+currentMovie.mID));
+                favStar.setEnabled(false);
             }
             else
             {
-                favStar.setImageResource(R.drawable.fav_start_1);
-                //add to the DB
+                favStar.setImageResource(R.drawable.fav_start_0);
+                //remove to the DB
             }
 
             favStartClicked = !favStartClicked;
         });
 
-        fillView(currentMoviecurrentMovie);
+        fillView(currentMovie);
 
-        HttpRequestAsync httpReqReviews = new HttpRequestAsync(Constants.TMDB_REQUESTS.REVIEWS_URL, this).setSpecificMovieId(currentMoviecurrentMovie.mID);
+        HttpRequestAsync httpReqReviews = new HttpRequestAsync(Constants.TMDB_REQUESTS.REVIEWS_URL, this).setSpecificMovieId(currentMovie.mID);
         httpReqReviews.execute();
 
-        HttpRequestAsync httpReqTrailes = new HttpRequestAsync(Constants.TMDB_REQUESTS.TRAILERS_URL, this).setSpecificMovieId(currentMoviecurrentMovie.mID);;
+        HttpRequestAsync httpReqTrailes = new HttpRequestAsync(Constants.TMDB_REQUESTS.TRAILERS_URL, this).setSpecificMovieId(currentMovie.mID);;
         httpReqTrailes.execute();
+
+        getSupportLoaderManager().initLoader(CURSOR_LOADER_ID, null, this);
     }
 
     @Override
@@ -174,4 +206,147 @@ public class MovieDetailActivity extends FragmentActivity implements IHttpReques
         Log.w(TAG, "onError callback received");
     }
     //endregion
+
+
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args)
+    {
+        return new CursorLoader(this,
+                MoviesContract.MoviesEntry.CONTENT_URI,
+                null,
+                null,
+                null,
+                null);
+    }
+
+    // Set the cursor in our CursorAdapter once the Cursor is loaded
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data)
+    {
+//        mFlavorAdapter.swapCursor(data);
+    }
+
+    // reset CursorAdapter on Loader Reset
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader)
+    {
+//        mFlavorAdapter.swapCursor(null);
+    }
+
+    // insert data into database
+    public void insertData(String localPosterPath)
+    {
+        movieValue = new ContentValues();
+        movieValue.put(MoviesContract.MoviesEntry._ID, currentMovie.mID);
+        movieValue.put(MoviesContract.MoviesEntry.COLUMN_TITLE, currentMovie.mTitle);
+        movieValue.put(MoviesContract.MoviesEntry.COLUMN_ORI_TITLE, currentMovie.mOriginalTitle);
+        movieValue.put(MoviesContract.MoviesEntry.COLUMN_ORI_LAN, currentMovie.mOriginalLanguage);
+        movieValue.put(MoviesContract.MoviesEntry.COLUMN_POSTER_PATH, currentMovie.mPosterPath);
+        movieValue.put(MoviesContract.MoviesEntry.COLUMN_LOCAL_POSTER_PATH, localPosterPath);
+        movieValue.put(MoviesContract.MoviesEntry.COLUMN_BACKDROP_PATH, currentMovie.mBackdropPath);
+        movieValue.put(MoviesContract.MoviesEntry.COLUMN_POPULARITY, currentMovie.mPopularityIndex);
+        movieValue.put(MoviesContract.MoviesEntry.COLUMN_VOTE_COUNT, currentMovie.mVoteCount);
+        movieValue.put(MoviesContract.MoviesEntry.COLUMN_VOTE_AVG, currentMovie.mVoteAvg);
+        movieValue.put(MoviesContract.MoviesEntry.COLUMN_ADULT_TYPE, currentMovie.mAdultType);
+        movieValue.put(MoviesContract.MoviesEntry.COLUMN_OVERVIEW, currentMovie.mOverveiw);
+        movieValue.put(MoviesContract.MoviesEntry.COLUMN_RELEASE_DATE, currentMovie.mReleaseDate);
+        movieValue.put(MoviesContract.MoviesEntry.COLUMN_GENERE, currentMovie.mGenereIDs[0]);
+
+        getContentResolver().insert(MoviesContract.MoviesEntry.CONTENT_URI, movieValue);
+
+        Log.d(TAG, "insertData movie: " + currentMovie.mTitle);
+
+        favStar.setEnabled(true);
+    }
+
+    //target to save
+    private class CustomTarget implements Target
+    {
+        WeakReference<MovieDetailActivity> activityRef;
+        String mImageName;
+
+        public CustomTarget(MovieDetailActivity activity, String imgName)
+        {
+            activityRef = new WeakReference<MovieDetailActivity>(activity);
+            mImageName = imgName;
+        }
+
+        @Override
+        public void onBitmapLoaded(final Bitmap bitmap, Picasso.LoadedFrom from)
+        {
+            new Thread(new Runnable()
+            {
+                @Override
+                public void run()
+                {
+                    try
+                    {
+                        if(!verifyStoragePermissions(activityRef.get()))
+                            return;
+
+                        String localPosterPath = Environment.getExternalStorageDirectory().getPath() + "/" + mImageName + ".jpg";
+                        File file = new File(localPosterPath);
+
+                        file.createNewFile();
+                        FileOutputStream ostream = new FileOutputStream(file);
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 75, ostream);
+                        ostream.close();
+
+                        Log.d(TAG, "Saved imaged: " + mImageName);
+
+                        insertData(localPosterPath);
+                    }
+                    catch (Exception e)
+                    {
+                        e.printStackTrace();
+                    }
+
+                }
+            }).start();
+        }
+
+        @Override
+        public void onBitmapFailed(Drawable errorDrawable)
+        {
+        }
+
+        @Override
+        public void onPrepareLoad(Drawable placeHolderDrawable)
+        {
+            if (placeHolderDrawable != null)
+            {
+            }
+        }
+    }
+
+    /**
+     * Checks if the app has permission to write to device storage
+     *
+     * If the app does not has permission then the user will be prompted to grant permissions
+     *
+     * @param activity
+     */
+    private boolean verifyStoragePermissions(Activity activity)
+    {
+        boolean permissionCheck = false;
+        // Check if we have write permission
+        int permission = ActivityCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE);
+
+        if (permission != PackageManager.PERMISSION_GRANTED)
+        {
+            // We don't have permission so prompt the user
+            ActivityCompat.requestPermissions(
+                    activity,
+                    PERMISSIONS_STORAGE,
+                    REQUEST_EXTERNAL_STORAGE
+            );
+            permissionCheck = false;
+        }
+        else
+        {
+            permissionCheck = true;
+        }
+
+        return permissionCheck;
+    }
 }
