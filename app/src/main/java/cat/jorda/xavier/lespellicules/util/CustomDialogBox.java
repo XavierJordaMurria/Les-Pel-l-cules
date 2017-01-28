@@ -120,6 +120,9 @@ public class CustomDialogBox extends DialogFragment implements  RadioGroup.OnChe
             case R.id.upcoming_type:
                 mCallback.onMoviesTChanged(MovieSearchTypes.UPCOMING);
                 break;
+            case R.id.favourite_type:
+                mCallback.onMoviesTChanged(MovieSearchTypes.FAVOURITES);
+                break;
         }
 
         handler.postDelayed(new MyDismissRunnable(this), 1000);

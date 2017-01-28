@@ -49,7 +49,14 @@ public class MovieInfo
     public List<TrailersInfo> mTrailersInfoList = null;
     public List<ReviewsInfo> mReviewsInfoList = null;
 
-    public String mLocalPosterPath = null;
+    private String mLocalPosterPath = null;
+
+    /**
+     * mIsInFavouriteDB: Set to false by default, it should be set to tru when the
+     * start btn is pressed and make sure to override this value when the favouriteList is loaded from the
+     * DB.
+     */
+    private boolean mIsInFavouriteDB = false;
 
 
 
@@ -96,5 +103,16 @@ public class MovieInfo
     {
         mLocalPosterPath = path;
         return this;
+    }
+
+    public MovieInfo setIsInFavouriteDBFlag(boolean flag)
+    {
+        mIsInFavouriteDB = flag;
+        return this;
+    }
+
+    public boolean isIsInFavouriteDB()
+    {
+        return mIsInFavouriteDB;
     }
 }

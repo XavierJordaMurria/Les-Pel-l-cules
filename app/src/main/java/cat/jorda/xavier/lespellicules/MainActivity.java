@@ -1,3 +1,18 @@
+/**
+ @file MainActivity.java
+ @author Xavier Jorda
+ @date January 2017
+ @brief Class MainActivity of the LesPel•licules app
+
+ (c) Jorda_Xavier_Ltd., 2010.  All rights reserved.
+
+ This software is the property of Jorda_Xavier_Ltd and may not be
+ copied or reproduced otherwise than on to a single hard disk for
+ backup or archival purposes. The source code is confidential
+ information and must not be disclosed to third parties or used
+ without the express written permission of Jorda_Xavier_Ltd.
+ */
+
 package cat.jorda.xavier.lespellicules;
 
 import android.app.DialogFragment;
@@ -22,7 +37,6 @@ import java.util.Collections;
 import java.util.List;
 
 import cat.jorda.xavier.lespellicules.data.MoviesContract;
-import cat.jorda.xavier.lespellicules.data.PeliculesDB;
 import cat.jorda.xavier.lespellicules.moviedetails.MovieAdapter;
 import cat.jorda.xavier.lespellicules.moviedetails.MovieDetailActivity;
 import cat.jorda.xavier.lespellicules.moviedetails.MovieInfo;
@@ -30,7 +44,6 @@ import cat.jorda.xavier.lespellicules.reviews.ReviewsInfo;
 import cat.jorda.xavier.lespellicules.trailers.TrailersInfo;
 import cat.jorda.xavier.lespellicules.util.*;
 
-import static android.R.id.list;
 import static cat.jorda.xavier.lespellicules.MovieSearchTypes.*;
 
 public class MainActivity extends AppCompatActivity implements IHttpRequestCallback,
@@ -61,10 +74,25 @@ public class MainActivity extends AppCompatActivity implements IHttpRequestCallb
             Intent mIntent = new Intent(this, MovieDetailActivity.class);
             mIntent.putExtra(Constants.MOVIE_POSTER_POSITION, position);
 
+            if(searchType.getText().toString().equals(Constants.FAVOURITES))
+                mIntent.putExtra(Constants.MOVIE_LIST, Constants.FAVOURITES);
+            else
+            {
+                //if it is not the favourite list it doesn't really matter.
+                mIntent.putExtra(Constants.MOVIE_LIST, Constants.MOVIE_LIST);
+            }
+
             startActivity(mIntent);
         });
 
         searchType = (TextView) findViewById(R.id.search_type);
+    }
+
+    @Override
+    public void onResume()
+    {
+        super.onResume();
+        loadFavouritesMovies();
     }
 
     @Override
@@ -92,10 +120,6 @@ public class MainActivity extends AppCompatActivity implements IHttpRequestCallb
 
             case (R.id.search):
                 showDialog();
-                break;
-
-            case (R.id.favourites):
-                loadFavouritesMovies();
                 break;
         }
 
@@ -150,7 +174,7 @@ public class MainActivity extends AppCompatActivity implements IHttpRequestCallb
 
     private void loadFavouritesMovies()
     {
-        Log.d(TAG, "loadFavouritesMovies");
+        Log.d(TAG, "\nloadFavouritesMovies");
 
         List<MovieInfo> tmpMovieList = new ArrayList<>();
 
@@ -196,7 +220,8 @@ public class MainActivity extends AppCompatActivity implements IHttpRequestCallb
                         cursor.getString(cursor.getColumnIndexOrThrow(MoviesContract.MoviesEntry.COLUMN_OVERVIEW)),
                         cursor.getString(cursor.getColumnIndexOrThrow(MoviesContract.MoviesEntry.COLUMN_RELEASE_DATE)),
                         new int[]{cursor.getInt(cursor.getColumnIndexOrThrow(MoviesContract.MoviesEntry.COLUMN_GENERE))})
-                        .setMovieLocalPosterPath(cursor.getString(cursor.getColumnIndexOrThrow(MoviesContract.MoviesEntry.COLUMN_LOCAL_POSTER_PATH)));
+                        .setMovieLocalPosterPath(cursor.getString(cursor.getColumnIndexOrThrow(MoviesContract.MoviesEntry.COLUMN_LOCAL_POSTER_PATH)))
+                        .setIsInFavouriteDBFlag(true);
 
                 tmpMovieList.add(movieTmp);
 
@@ -205,6 +230,8 @@ public class MainActivity extends AppCompatActivity implements IHttpRequestCallb
 
             // always close the cursor
             cursor.close();
+
+            MainApplication.getInstance().mMovFavList = new ArrayList<>(tmpMovieList);
         }
         else
         {
@@ -212,6 +239,12 @@ public class MainActivity extends AppCompatActivity implements IHttpRequestCallb
         }
 
         //replace main movies list.
+    }
+
+    private void showFavMovies()
+    {
+        Log.d(TAG, "showFavMovies");
+        gridView.setAdapter(new MovieAdapter(this, MainApplication.getInstance().mMovFavList));
     }
     //endregion
 
@@ -224,35 +257,47 @@ public class MainActivity extends AppCompatActivity implements IHttpRequestCallb
                 searchType.setText(Constants.POPULAR);
                 Log.d(TAG, "We got this new movie search:" + Constants.POPULAR);
                 httpReq = new HttpRequestAsync(Constants.TMDB_REQUESTS.POPULAR_URL, this);
+                httpReq.execute();
                 break;
 
             case TOP_RATED:
                 searchType.setText(Constants.TOP_RATED);
                 Log.d(TAG, "We got this new movie search:" + Constants.TOP_RATED);
                 httpReq = new HttpRequestAsync(Constants.TMDB_REQUESTS.TOP_RATED_URL, this);
+                httpReq.execute();
                 break;
 
             case NOW_PLAYING:
                 searchType.setText(Constants.NOW_PLAYING);
                 Log.d(TAG, "We got this new movie search:" + Constants.NOW_PLAYING);
                 httpReq = new HttpRequestAsync(Constants.TMDB_REQUESTS.NOW_PLAYING_URL, this);
+                httpReq.execute();
                 break;
 
             case LATEST:
                 searchType.setText(Constants.LATEST);
                 Log.d(TAG, "We got this new movie search:" + Constants.LATEST);
                 httpReq = new HttpRequestAsync(Constants.TMDB_REQUESTS.LATEST_URL, this);
+                httpReq.execute();
                 break;
 
             case UPCOMING:
                 searchType.setText(Constants.UPCOMING);
                 Log.d(TAG, "We got this new movie search:" + Constants.UPCOMING);
                 httpReq = new HttpRequestAsync(Constants.TMDB_REQUESTS.UPCOMING_URL, this);
+                httpReq.execute();
+                break;
+
+            case FAVOURITES:
+                searchType.setText(Constants.FAVOURITES);
+                Log.d(TAG, "We got this new movie search:" + Constants.FAVOURITES);
+//                httpReq = new HttpRequestAsync(Constants.TMDB_REQUESTS.UPCOMING_URL, this);
+                loadFavouritesMovies();
+                showFavMovies();
                 break;
 
             default:
                 Log.e(TAG, "No possible someting when wrong");
         }
-        httpReq.execute();
     }
 }

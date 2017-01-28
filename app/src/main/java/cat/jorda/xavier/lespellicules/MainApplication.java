@@ -19,6 +19,7 @@ public class MainApplication extends Application
     private static MainApplication singleton;
 
     public List<MovieInfo> mMoviesSArray = new ArrayList<>();
+    public List<MovieInfo> mMovFavList = new ArrayList<>();
 
     public static MainApplication getInstance()
     {

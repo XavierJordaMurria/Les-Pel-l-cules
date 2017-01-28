@@ -1,5 +1,16 @@
 /**
- * Created by xj on 18/12/2016.
+ @file MovieDetailActivity.java
+ @author Xavier Jorda
+ @date January 2017
+ @brief Class MovieDetailActivity show the details for the clicked movie.
+
+ (c) Jorda_Xavier_Ltd., 2010.  All rights reserved.
+
+ This software is the property of Jorda_Xavier_Ltd and may not be
+ copied or reproduced otherwise than on to a single hard disk for
+ backup or archival purposes. The source code is confidential
+ information and must not be disclosed to third parties or used
+ without the express written permission of Jorda_Xavier_Ltd.
  */
 
 
@@ -36,6 +47,7 @@ import com.squareup.picasso.Target;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 import java.util.List;
 
 import cat.jorda.xavier.lespellicules.MainApplication;
@@ -80,8 +92,13 @@ public class MovieDetailActivity extends FragmentActivity implements IHttpReques
         Log.d(TAG, "onCreate");
 
         itemClicked = getIntent().getExtras().getInt(Constants.MOVIE_POSTER_POSITION);
-        currentMovie =  MainApplication.getInstance().mMoviesSArray.get(itemClicked);
 
+        if( getIntent().getExtras().getString(Constants.MOVIE_LIST).equals(Constants.FAVOURITES))
+            currentMovie =  MainApplication.getInstance().mMovFavList.get(itemClicked);
+        else
+            currentMovie =  MainApplication.getInstance().mMoviesSArray.get(itemClicked);
+
+        Log.d(TAG, "Loading MOVIE: ===> " + currentMovie.mTitle);
         setContentView(R.layout.movie_detail);
 
         poster = (ImageView)findViewById(R.id.movie_details_poster);
@@ -113,19 +130,41 @@ public class MovieDetailActivity extends FragmentActivity implements IHttpReques
 
         favStar = (ImageView)findViewById(R.id.fav_star);
 
+        //Updating the favStart accordingly to the latest state.
+        if(contains(MainApplication.getInstance().mMovFavList, currentMovie.mID))
+        {
+            Log.d(TAG, "Current movie is in the FavMoviesList");
+            favStar.setImageResource(R.drawable.fav_start_1);
+            favStartClicked = true;
+        }
+        else
+        {
+            favStartClicked = false;
+            favStar.setImageResource(R.drawable.fav_start_0);
+        }
+
         favStar.setOnClickListener((View v) ->
         {
             if(!favStartClicked)
             {
+                Log.d(TAG, "FAV START CLICKED");
+
+                if(!verifyStoragePermissions(this))
+                    return;
+
                 //add to the DB
                 favStar.setImageResource(R.drawable.fav_start_1);
                 Picasso.with(getApplicationContext()).load(Constants.TMDB_BASE_IMG_URL+currentMovie.mPosterPath).into(new CustomTarget(this, currentMovie.mTitle+currentMovie.mID));
-                favStar.setEnabled(false);
+                MainApplication.getInstance().mMoviesSArray.get(itemClicked).setIsInFavouriteDBFlag(true);
             }
             else
             {
+                Log.d(TAG, "FAV START UN-CLICKED");
                 favStar.setImageResource(R.drawable.fav_start_0);
+                MainApplication.getInstance().mMoviesSArray.get(itemClicked).setIsInFavouriteDBFlag(false);
                 //remove to the DB
+//                getContentResolver()..insert(MoviesContract.MoviesEntry.CONTENT_URI, movieValue);
+                getContentResolver().delete(MoviesContract.MoviesEntry.CONTENT_URI,"_ID=?", new String[]{String.valueOf(currentMovie.mID)});
             }
 
             favStartClicked = !favStartClicked;
@@ -236,6 +275,8 @@ public class MovieDetailActivity extends FragmentActivity implements IHttpReques
     // insert data into database
     public void insertData(String localPosterPath)
     {
+        Log.d(TAG, "insertData movie: " + currentMovie.mTitle);
+
         movieValue = new ContentValues();
         movieValue.put(MoviesContract.MoviesEntry._ID, currentMovie.mID);
         movieValue.put(MoviesContract.MoviesEntry.COLUMN_TITLE, currentMovie.mTitle);
@@ -253,10 +294,6 @@ public class MovieDetailActivity extends FragmentActivity implements IHttpReques
         movieValue.put(MoviesContract.MoviesEntry.COLUMN_GENERE, currentMovie.mGenereIDs[0]);
 
         getContentResolver().insert(MoviesContract.MoviesEntry.CONTENT_URI, movieValue);
-
-        Log.d(TAG, "insertData movie: " + currentMovie.mTitle);
-
-        favStar.setEnabled(true);
     }
 
     //target to save
@@ -281,9 +318,6 @@ public class MovieDetailActivity extends FragmentActivity implements IHttpReques
                 {
                     try
                     {
-                        if(!verifyStoragePermissions(activityRef.get()))
-                            return;
-
                         String localPosterPath = Environment.getExternalStorageDirectory().getPath() + "/" + mImageName + ".jpg";
                         File file = new File(localPosterPath);
 
@@ -346,7 +380,16 @@ public class MovieDetailActivity extends FragmentActivity implements IHttpReques
         {
             permissionCheck = true;
         }
-
         return permissionCheck;
+    }
+
+    boolean contains(List<MovieInfo> list, int id)
+    {
+        for (MovieInfo item : list)
+        {
+            if (item.mID == id)
+                return true;
+        }
+        return false;
     }
 }

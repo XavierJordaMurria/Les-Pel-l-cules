@@ -16,6 +16,7 @@ import android.net.Uri;
 
 public class MoviesProvider extends ContentProvider
 {
+    private static final String TAG = "MoviesProvider";
     private static final String LOG_TAG = MoviesProvider.class.getSimpleName();
     private static final UriMatcher sUriMatcher = buildUriMatcher();
     private PeliculesDB mOpenHelper;
@@ -110,6 +111,8 @@ public class MoviesProvider extends ContentProvider
     @Override
     public Uri insert(Uri uri, ContentValues values)
     {
+        Log.d(TAG, "insert");
+
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
         Uri returnUri;
 
@@ -139,6 +142,8 @@ public class MoviesProvider extends ContentProvider
     @Override
     public int delete(Uri uri, String selection, String[] selectionArgs)
     {
+        Log.d(TAG, "delete");
+
         final SQLiteDatabase db = mOpenHelper.getWritableDatabase();
         final int match = sUriMatcher.match(uri);
         int numDeleted;

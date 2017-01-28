@@ -37,7 +37,7 @@ public class Constants
      * Get your onw key from the following link
      * https://www.themoviedb.org/?_dc=1481275050
      */
-    public static final String TMDB_KEY = "your key";
+    public static final String TMDB_KEY = "your_key";
     public static final String TMDB_BASE_URL = "https://api.themoviedb.org/3/movie/";
     public static final String TMDB_BASE_IMG_URL = "http://image.tmdb.org/t/p/w500//";
 
@@ -95,6 +95,7 @@ public class Constants
      * Intent Key for starting movieDetailActivity
      */
     public static final String MOVIE_POSTER_POSITION = "movie_poster_position";
+    public static final String MOVIE_LIST = "movie_list";
 
     /**
      * Movies Types Names
@@ -104,5 +105,6 @@ public class Constants
     public static final String NOW_PLAYING  = "Now Playing";
     public static final String LATEST       = "Latest";
     public static final String UPCOMING     = "Upcoming";
+    public static final String FAVOURITES     = "Favourites";
 
 }
