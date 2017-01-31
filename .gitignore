@@ -9,3 +9,9 @@
 .externalNativeBuild
 "LesPel\342\200\242licules1.0.apk"
 libs/
+
+*.apk
+
+app/src/main/java/cat/jorda/xavier/lespellicules/util/Constants.java
+
+app/src/main/java/cat/jorda/xavier/lespellicules/util/Constants.java
