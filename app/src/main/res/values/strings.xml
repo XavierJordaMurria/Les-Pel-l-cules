@@ -15,6 +15,6 @@
     <string name="trailers">Trailes</string>
     <string name="reviews">Reviews</string>
 
-    <string name="content_authority">cat.jorda.xavier.lespelicules.app</string>
+    <string name="content_authority" translatable="false">cat.jorda.xavier.lespelicules.app</string>
 
 </resources>

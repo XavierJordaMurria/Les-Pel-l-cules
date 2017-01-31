@@ -163,7 +163,6 @@ public class MovieDetailActivity extends FragmentActivity implements IHttpReques
                 favStar.setImageResource(R.drawable.fav_start_0);
                 MainApplication.getInstance().mMoviesSArray.get(itemClicked).setIsInFavouriteDBFlag(false);
                 //remove to the DB
-//                getContentResolver()..insert(MoviesContract.MoviesEntry.CONTENT_URI, movieValue);
                 getContentResolver().delete(MoviesContract.MoviesEntry.CONTENT_URI,"_ID=?", new String[]{String.valueOf(currentMovie.mID)});
             }
 
@@ -194,6 +193,7 @@ public class MovieDetailActivity extends FragmentActivity implements IHttpReques
     // class for being re-used by several instances
     protected void setFragment(Fragment fragment)
     {
+        Log.d(TAG, "setFragment");
         Bundle args = new Bundle();
         args.putInt("index", itemClicked);
         fragment.setArguments(args);
@@ -228,14 +228,14 @@ public class MovieDetailActivity extends FragmentActivity implements IHttpReques
     @Override
     public void onReviewsDone(List<ReviewsInfo> revInfo)
     {
-        Log.d(TAG, "onReviewsDone callback received");
+        Log.d(TAG, "onReviewsDone callback received #Reviews: " + revInfo.size());
         MainApplication.getInstance().mMoviesSArray.get(itemClicked).addReview(revInfo);
     }
 
     @Override
     public void onTrailersDone(List<TrailersInfo> traiInfo)
     {
-        Log.d(TAG, "onTrailersDone callback received");
+        Log.d(TAG, "onTrailersDone callback received #Trailers: " + traiInfo.size());
         MainApplication.getInstance().mMoviesSArray.get(itemClicked).addTrailes(traiInfo);
     }
 

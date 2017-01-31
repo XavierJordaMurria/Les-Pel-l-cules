@@ -4,8 +4,10 @@ package cat.jorda.xavier.lespellicules.util;
  * Created by xj on 06/12/2016.
  */
 
-public class Constants
+public final class Constants
 {
+    private Constants(){}
+
     public static final String KEY_ADULT    = "adult";
     public static final String KEY_ID   = "id";
     public static final String KEY_ORG_TITLE    = "original_title";
@@ -37,7 +39,7 @@ public class Constants
      * Get your onw key from the following link
      * https://www.themoviedb.org/?_dc=1481275050
      */
-    public static final String TMDB_KEY = "your_key";
+    public static final String TMDB_KEY = "5aa4e3449bf8f62af8d2c2c02089946c";
     public static final String TMDB_BASE_URL = "https://api.themoviedb.org/3/movie/";
     public static final String TMDB_BASE_IMG_URL = "http://image.tmdb.org/t/p/w500//";
 

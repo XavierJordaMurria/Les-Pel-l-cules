@@ -9,6 +9,7 @@
               android:layout_width="match_parent"
               android:textSize="10dp"
               android:text="@string/search_box_title"
+              android:textColor="#020000"
               android:gravity="center"
               android:textAlignment="center"/>
 
@@ -17,6 +18,7 @@
               android:layout_width="match_parent"
               android:textSize="15dp"
               android:text="@string/search_box_title"
+              android:textColor="#020000"
               android:gravity="center"/>
 
 </LinearLayout>
