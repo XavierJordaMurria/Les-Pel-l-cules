@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">LesPel•licules</string>
+    <string name="app_name">Les Pel•lícules</string>
 
 
     <string name="moview">Movies</string>
@@ -16,5 +16,6 @@
     <string name="reviews">Reviews</string>
 
     <string name="content_authority" translatable="false">cat.jorda.xavier.lespelicules.app</string>
+    <string name="no_data_available">No information available."</string>>
 
 </resources>

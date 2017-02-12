@@ -27,6 +27,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ListView;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 
@@ -71,6 +72,10 @@ public class ReviewsFragment extends Fragment
 
         // Attach the adapter to a ListView
         ListView listView = (ListView)trailersListView.findViewById(R.id.trailers_list_view);
+
+        View emptyView = (View)getActivity().findViewById(R.id.no_data_revs);
+
+        listView.setEmptyView(emptyView);
         listView.setAdapter(adapter);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener()
@@ -81,8 +86,6 @@ public class ReviewsFragment extends Fragment
                 Log.d(TAG,"listView item click on position:" + position);
             }
         });
-
-
         return trailersListView;
     }
 }
